@@ -4,8 +4,9 @@ import { Mutex } from 'async-mutex';
 
 import { ApiParams, ApiRequestParams } from './types/snapApi';
 import { getSafes } from './getSafes';
-import { createTx } from './createTx';
 import { getDerivedEOAs } from './getDerivedEOAs';
+import { createRandomTransfer } from './createRandomTransfer';
+import { confirmTxAA } from './confirmTxAA';
 
 declare const snap;
 const mutex = new Mutex();
@@ -81,10 +82,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       return getSafes(apiParams);
     case 'safeFox_getDerivedEOAs':
       return getDerivedEOAs(apiParams);
-    case 'safeFox_createTx':
-      return createTx(apiParams);
+    case 'safeFox_createRandomTransfer':
+      return createRandomTransfer(apiParams);
     case 'safeFox_confirmTxAA':
-      return createTx(apiParams);
+      return confirmTxAA(apiParams);
     default:
       throw new Error('Method not found.');
   }

@@ -3,10 +3,27 @@ import { createGlobalStyle } from 'styled-components';
 
 const breakpoints = ['600px', '768px', '992px'];
 
+export type Variant =
+  | 'primary'
+  | 'secondary'
+  | 'success'
+  | 'error'
+  | 'warning'
+  | 'info';
+
+export enum VariantOptions {
+  PRIMARY = 'primary',
+  SECONDARY = 'secondary',
+  SUCCESS = 'success',
+  ERROR = 'error',
+  WARNING = 'warning',
+  INFO = 'info',
+}
+
 /**
  * Common theme properties.
  */
-const theme = {
+export const theme = {
   fonts: {
     default:
       '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',

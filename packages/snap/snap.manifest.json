@@ -7,7 +7,7 @@
     "url": "https://github.com/MetaMask/template-snap-monorepo.git"
   },
   "source": {
-    "shasum": "IFZs5T+G/ymOINrM1PyiQI8hQ6Gc6whPZnXXq2ezvpA=",
+    "shasum": "5wBv03FJi2Xwc2wpEFKdP0CbGDYq87131a71ZnnSyeM=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -24,7 +24,6 @@
       "dapps": true,
       "snaps": false
     },
-    "snap_dialog": {},
     "snap_manageState": {},
     "wallet_snap": {
       "local:http://localhost:8081/": {}

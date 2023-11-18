@@ -14,31 +14,19 @@ type BaseRequestParams = {
 
 export type GetSafesRequestParams = BaseRequestParams;
 export type GetDerivedEOAsRequestParams = BaseRequestParams;
-export type CreateTxRequestParams = BaseRequestParams & {
+export type CreateRandomTransferRequestParams = BaseRequestParams & {
   safe: string;
   to: string;
-  value: number;
-  operation: number;
-  data?: string;
-  gasToken?: string;
-  safeTxGas: number;
-  baseGas: number;
-  gasPrice: number;
-  refundReceiver?: string;
-  nonce: number;
-  contractTransactionHash: string;
-  sender: string;
-  signature?: string;
-  origin?: string;
 };
 
 export type ConfirmTxRequestParams = BaseRequestParams & {
   safeTxHash: string;
-  signature: string;
+  safe: string;
+  execute?: boolean;
 };
 
 export type ApiRequestParams =
   | GetSafesRequestParams
   | GetDerivedEOAsRequestParams
-  | CreateTxRequestParams
+  | CreateRandomTransferRequestParams
   | ConfirmTxRequestParams;

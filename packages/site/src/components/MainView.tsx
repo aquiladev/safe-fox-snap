@@ -6,6 +6,8 @@ import { MetaMaskContext } from '../hooks';
 import { shortenAddress } from '../utils/utils';
 import { formatUnits } from 'ethers/lib/utils';
 import { Button } from './Button';
+import { PopIn } from './PopIn';
+import { ConfirmSafeTxModal } from './ConfirmSafeTxModal';
 
 const Wrapper = styled.div`
   display: flex;
@@ -62,6 +64,8 @@ type Props = {
 export const MainView = ({ address, chainId }: Props) => {
   const [state, dispatch] = useContext(MetaMaskContext);
   const [selectedTab, setSelectedTab] = useState(0);
+  const [confirmTxModalVisible, setConfirmTxModalVisible] = useState(false);
+  const [selectedTx, setSelectedTx] = useState();
 
   const chainSafes = state.safes[chainId];
   const accSafes = !!chainSafes && chainSafes[address];
@@ -71,7 +75,7 @@ export const MainView = ({ address, chainId }: Props) => {
   }
 
   const firstSafe = accSafes?.sort(
-    (s1, s2) => s2?.txs?.count - s1?.txs?.count,
+    (s1, s2) => s1?.txs?.count - s2?.txs?.count,
   )[0];
   console.log('FIRST', firstSafe);
 
@@ -80,6 +84,7 @@ export const MainView = ({ address, chainId }: Props) => {
       <SideBar
         address={address}
         chainId={chainId}
+        selectedSafe={firstSafe.address}
         handleClick={(tab) => setSelectedTab(tab)}
       />
       <RightPart>
@@ -125,7 +130,14 @@ export const MainView = ({ address, chainId }: Props) => {
                           </div>
                         </div>
                         <div>
-                          <Button>Execute</Button>
+                          <Button
+                            onClick={() => {
+                              setSelectedTx(tx);
+                              setConfirmTxModalVisible(true);
+                            }}
+                          >
+                            Sign
+                          </Button>
                         </div>
                       </ItemView>
                     );
@@ -205,6 +217,13 @@ export const MainView = ({ address, chainId }: Props) => {
           )}
         </RightPartContent>
       </RightPart>
+
+      <PopIn isOpen={confirmTxModalVisible || false}>
+        <ConfirmSafeTxModal
+          handleCancel={() => setConfirmTxModalVisible(false)}
+          tx={selectedTx}
+        />
+      </PopIn>
     </Wrapper>
   );
 };

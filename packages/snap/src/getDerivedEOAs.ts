@@ -1,5 +1,6 @@
 import { ethers, utils } from 'ethers';
 import { ApiParams, GetDerivedEOAsRequestParams } from './types/snapApi';
+import { recoveAccounts, signMessage } from './utils/starknet';
 
 type DerivedAaddress = {
   address: string;
@@ -18,20 +19,7 @@ export async function getDerivedEOAs(
       throw new Error(`Unsupported chainId: ${chainId}`);
     }
 
-    const accs = await snap.request({
-      method: 'wallet_invokeSnap',
-      params: {
-        snapId: 'local:http://localhost:8081/',
-        request: {
-          method: 'starkNet_recoverAccounts',
-          params: {
-            startScanIndex: 0,
-            maxScanned: 1,
-            maxMissed: 0,
-          },
-        },
-      },
-    });
+    const accs = await recoveAccounts();
     console.log(
       `getDerivedEOAs [starkNet_recoverAccounts]:\n${JSON.stringify(
         accs,
@@ -45,41 +33,42 @@ export async function getDerivedEOAs(
       throw new Error(`No accounts found`);
     }
 
-    const result = await snap.request({
-      method: 'wallet_invokeSnap',
-      params: {
-        snapId: 'local:http://localhost:8081/',
-        request: {
-          method: 'starkNet_signMessage',
-          params: {
-            signerAddress: accs[0].address,
-            typedDataMessage: {
-              types: {
-                StarkNetDomain: [
-                  { name: 'name', type: 'felt' },
-                  { name: 'version', type: 'felt' },
-                  { name: 'chainId', type: 'felt' },
-                ],
-                Person: [
-                  { name: 'name', type: 'felt' },
-                  { name: 'wallet', type: 'felt' },
-                ],
-                Msg: [{ name: 'contents', type: 'felt' }],
-              },
-              primaryType: 'Msg',
-              domain: {
-                name: 'Safe Fox',
-                version: '1',
-                chainId: 1,
-              },
-              message: {
-                contents: 'safe-fox',
-              },
-            },
-          },
-        },
-      },
-    });
+    // const result = await snap.request({
+    //   method: 'wallet_invokeSnap',
+    //   params: {
+    //     snapId: 'local:http://localhost:8081/',
+    //     request: {
+    //       method: 'starkNet_signMessage',
+    //       params: {
+    //         signerAddress: accs[0].address,
+    //         typedDataMessage: {
+    //           types: {
+    //             StarkNetDomain: [
+    //               { name: 'name', type: 'felt' },
+    //               { name: 'version', type: 'felt' },
+    //               { name: 'chainId', type: 'felt' },
+    //             ],
+    //             Person: [
+    //               { name: 'name', type: 'felt' },
+    //               { name: 'wallet', type: 'felt' },
+    //             ],
+    //             Msg: [{ name: 'contents', type: 'felt' }],
+    //           },
+    //           primaryType: 'Msg',
+    //           domain: {
+    //             name: 'Safe Fox',
+    //             version: '1',
+    //             chainId: 1,
+    //           },
+    //           message: {
+    //             contents: 'safe-fox',
+    //           },
+    //         },
+    //       },
+    //     },
+    //   },
+    // });
+    const result = await signMessage(accs[0].address, 'safe-fox');
     console.log(
       `getDerivedEOAs [starkNet_signMessage]:\n${JSON.stringify(
         result,

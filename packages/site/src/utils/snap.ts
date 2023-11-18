@@ -84,6 +84,33 @@ export const sendGetSafes = async () => {
   });
 };
 
+export const confirmSafeTxAA = async (safe: string, safeTxHash: string) => {
+  console.log('CONFIRM SAFE TX AA', safe, safeTxHash);
+  return window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: {
+        method: 'safeFox_confirmTxAA',
+        params: { chainId: 5, safe, safeTxHash, execute: false },
+      },
+    },
+  });
+};
+
+export const createRandomTransfer = async (safe: string, to: string) => {
+  return window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: {
+        method: 'safeFox_createRandomTransfer',
+        params: { chainId: 5, safe, to },
+      },
+    },
+  });
+};
+
 export const useSnap = () => {
   const [, dispatch] = useContext(MetaMaskContext);
 

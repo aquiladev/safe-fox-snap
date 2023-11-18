@@ -32,15 +32,22 @@ import {
 } from './SideBar.style';
 import { MetaMaskContext } from '../../hooks';
 import { SafeAddress } from '../SafeAddress';
+import { createRandomTransfer } from '../../utils';
 
 type Props = {
   address: string;
   chainId: number;
+  selectedSafe: string;
   handleClick(opt: number): void;
 };
 
-export const SideBarView = ({ address, chainId, handleClick }: Props) => {
-  const [state, dispatch] = useContext(MetaMaskContext);
+export const SideBarView = ({
+  address,
+  chainId,
+  selectedSafe,
+  handleClick,
+}: Props) => {
+  const [state] = useContext(MetaMaskContext);
 
   const [accountDetailsOpen, setAccountDetailsOpen] = useState(false);
 
@@ -50,9 +57,7 @@ export const SideBarView = ({ address, chainId, handleClick }: Props) => {
   const accSafes = !!chainSafes && chainSafes[address];
 
   const ref = useRef<HTMLDivElement>();
-  const firstSafe = accSafes?.sort(
-    (s1, s2) => s2?.txs?.count - s1?.txs?.count,
-  )[0];
+  const firstSafe = accSafes?.find((s) => s.address === selectedSafe);
   const rest = accSafes?.filter((x) => x.address !== firstSafe.address);
 
   return (
@@ -61,7 +66,7 @@ export const SideBarView = ({ address, chainId, handleClick }: Props) => {
         isOpen={accountDetailsOpen}
         setIsOpen={setAccountDetailsOpen}
       >
-        <SafeDetailsModal address={firstSafe.address} meta={firstSafe.meta} />
+        <SafeDetailsModal meta={firstSafe.meta} />
       </PopInStyled>
       <AccountDetails
         arrowVisible={false}
@@ -75,11 +80,11 @@ export const SideBarView = ({ address, chainId, handleClick }: Props) => {
             </CreateSafeButton>
             <AccountDetailButton
               backgroundTransparent
-              iconLeft="qrcode"
+              iconLeft="info-circle"
               style={{ paddingLeft: '8px' }}
               onClick={() => setAccountDetailsOpen(true)}
             >
-              Safe config
+              Safe metadata
             </AccountDetailButton>
           </AccountDetailsContent>
         }
@@ -96,7 +101,19 @@ export const SideBarView = ({ address, chainId, handleClick }: Props) => {
         <ActButton onClick={() => handleClick(0)}>Transactions</ActButton>
         <ActButton onClick={() => handleClick(1)}>Assets</ActButton>
       </DivList>
-      <AddTxButton disabled>Add transaction</AddTxButton>
+      <AddTxButton
+        disabled
+        onClick={async () => {
+          try {
+            await createRandomTransfer(selectedSafe, state.account);
+            alert('Transaction created');
+          } catch (error) {
+            console.error(error);
+          }
+        }}
+      >
+        Add transaction
+      </AddTxButton>
     </Wrapper>
   );
 };
