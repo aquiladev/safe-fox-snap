@@ -1,7 +1,9 @@
+import { useContext } from 'react';
 import type { MetaMaskInpageProvider } from '@metamask/providers';
 
 import { defaultSnapOrigin } from '../config';
 import type { GetSnapsResponse, Snap } from '../types';
+import { FoxActions, MetaMaskContext } from '../hooks';
 
 /**
  * Get the installed snaps in MetaMask.
@@ -62,6 +64,62 @@ export const sendHello = async () => {
     method: 'wallet_invokeSnap',
     params: { snapId: defaultSnapOrigin, request: { method: 'hello' } },
   });
+};
+
+export const sendPing = async () => {
+  const res = await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: { snapId: defaultSnapOrigin, request: { method: 'ping' } },
+  });
+  console.log(res);
+};
+
+export const sendGetSafes = async () => {
+  return window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: {
+      snapId: defaultSnapOrigin,
+      request: { method: 'safeFox_getSafes', params: { chainId: 5 } },
+    },
+  });
+};
+
+export const useSnap = () => {
+  const [, dispatch] = useContext(MetaMaskContext);
+
+  const initSnap = async (chainId: number) => {
+    try {
+      const res = await window.ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: defaultSnapOrigin,
+          request: { method: 'safeFox_getSafes', params: { chainId } },
+        },
+      });
+      console.log('SAFES', res);
+
+      const derivedAddresses = await window.ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: {
+          snapId: defaultSnapOrigin,
+          request: { method: 'safeFox_getDerivedEOAs', params: { chainId } },
+        },
+      });
+      console.log('DERIVED EOAs', derivedAddresses);
+
+      dispatch({ type: FoxActions.SetSafes, payload: res });
+      dispatch({ type: FoxActions.SetDerivedEOAs, payload: derivedAddresses });
+      dispatch({ type: FoxActions.SetLoading, payload: false });
+    } catch (error) {
+      console.error(error);
+      dispatch({ type: FoxActions.SetError, payload: error });
+    }
+    return;
+  };
+
+  return {
+    initSnap,
+  };
 };
 
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');

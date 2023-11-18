@@ -1,3 +1,4 @@
+import { MetaMaskInpageProvider } from '@metamask/providers';
 import { getSnaps } from './snap';
 
 /**
@@ -47,6 +48,41 @@ export const detectSnaps = async () => {
     return false;
   }
 };
+
+export const detectAccount = async () => {
+  if (window.ethereum?.detected) {
+    for (const provider of window.ethereum.detected) {
+      try {
+        return _getAccount(provider);
+      } catch {
+        // no-op
+      }
+    }
+  }
+
+  if (window.ethereum?.providers) {
+    for (const provider of window.ethereum.providers) {
+      try {
+        return _getAccount(provider);
+      } catch {
+        // no-op
+      }
+    }
+  }
+
+  return _getAccount(window.ethereum);
+};
+
+async function _getAccount(provider: MetaMaskInpageProvider) {
+  const accounts = await provider?.request({
+    method: 'eth_requestAccounts',
+  });
+  if (accounts.length === 0) {
+    return undefined;
+  }
+
+  return accounts[0];
+}
 
 /**
  * Detect if the wallet injecting the ethereum object is MetaMask Flask.

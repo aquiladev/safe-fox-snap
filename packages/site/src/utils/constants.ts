@@ -1,0 +1,3 @@
+export const TIMEOUT_DURATION = 10000;
+
+export const POPOVER_DURATION = 3000;

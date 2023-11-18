@@ -2,24 +2,37 @@ import type { Dispatch, ReactNode, Reducer } from 'react';
 import { createContext, useEffect, useReducer } from 'react';
 
 import type { Snap } from '../types';
-import { detectSnaps, getSnap, isFlask } from '../utils';
+import { detectAccount, detectSnaps, getSnap, isFlask } from '../utils';
+
+export type DerivedAddress = {
+  address: string;
+  origin: string;
+  type: string;
+};
 
 export type MetamaskState = {
+  account?: string;
   snapsDetected: boolean;
   isFlask: boolean;
+  isLoading: boolean;
   installedSnap?: Snap;
   error?: Error;
+  safes: any;
+  derivedEOAs: DerivedAddress[];
 };
 
 const initialState: MetamaskState = {
   snapsDetected: false,
   isFlask: false,
+  isLoading: true,
+  safes: {},
+  derivedEOAs: [],
 };
 
-type MetamaskDispatch = { type: MetamaskActions; payload: any };
+type FoxDispatch = { type: FoxActions; payload: any };
 
 export const MetaMaskContext = createContext<
-  [MetamaskState, Dispatch<MetamaskDispatch>]
+  [MetamaskState, Dispatch<FoxDispatch>]
 >([
   initialState,
   () => {
@@ -27,35 +40,58 @@ export const MetaMaskContext = createContext<
   },
 ]);
 
-export enum MetamaskActions {
+export enum FoxActions {
+  SetAccount = 'SetAccount',
   SetInstalled = 'SetInstalled',
   SetSnapsDetected = 'SetSnapsDetected',
   SetError = 'SetError',
   SetIsFlask = 'SetIsFlask',
+  SetLoading = 'SetLoading',
+  SetSafes = 'SetSafes',
+  SetDerivedEOAs = 'SetDerivedEOAs',
 }
 
-const reducer: Reducer<MetamaskState, MetamaskDispatch> = (state, action) => {
+const reducer: Reducer<MetamaskState, FoxDispatch> = (state, action) => {
   switch (action.type) {
-    case MetamaskActions.SetInstalled:
+    case FoxActions.SetAccount:
+      return {
+        ...state,
+        account: action.payload,
+      };
+    case FoxActions.SetInstalled:
       return {
         ...state,
         installedSnap: action.payload,
       };
-
-    case MetamaskActions.SetSnapsDetected:
+    case FoxActions.SetSnapsDetected:
       return {
         ...state,
         snapsDetected: action.payload,
       };
-    case MetamaskActions.SetIsFlask:
+    case FoxActions.SetIsFlask:
       return {
         ...state,
         isFlask: action.payload,
       };
-    case MetamaskActions.SetError:
+    case FoxActions.SetLoading:
+      return {
+        ...state,
+        isLoading: action.payload,
+      };
+    case FoxActions.SetError:
       return {
         ...state,
         error: action.payload,
+      };
+    case FoxActions.SetSafes:
+      return {
+        ...state,
+        safes: action.payload,
+      };
+    case FoxActions.SetDerivedEOAs:
+      return {
+        ...state,
+        derivedEOAs: action.payload,
       };
     default:
       return state;
@@ -81,12 +117,21 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const setSnapsCompatibility = async () => {
       dispatch({
-        type: MetamaskActions.SetSnapsDetected,
+        type: FoxActions.SetSnapsDetected,
         payload: await detectSnaps(),
       });
     };
 
     setSnapsCompatibility().catch(console.error);
+
+    const setAccount = async () => {
+      dispatch({
+        type: FoxActions.SetAccount,
+        payload: await detectAccount(),
+      });
+    };
+
+    setAccount().catch(console.error);
   }, [window.ethereum]);
 
   // Set installed snaps
@@ -96,14 +141,14 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
      */
     async function detectSnapInstalled() {
       dispatch({
-        type: MetamaskActions.SetInstalled,
+        type: FoxActions.SetInstalled,
         payload: await getSnap(),
       });
     }
 
     const checkIfFlask = async () => {
       dispatch({
-        type: MetamaskActions.SetIsFlask,
+        type: FoxActions.SetIsFlask,
         payload: await isFlask(),
       });
     };
@@ -120,7 +165,7 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
     if (state.error) {
       timeoutId = window.setTimeout(() => {
         dispatch({
-          type: MetamaskActions.SetError,
+          type: FoxActions.SetError,
           payload: undefined,
         });
       }, 10000);

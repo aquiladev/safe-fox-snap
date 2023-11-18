@@ -1,5 +1,6 @@
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { BigNumber } from 'ethers';
 
 import {
   ConnectButton,
@@ -7,16 +8,21 @@ import {
   ReconnectButton,
   SendHelloButton,
   Card,
+  Button,
 } from '../components';
 import { defaultSnapOrigin } from '../config';
-import { MetamaskActions, MetaMaskContext } from '../hooks';
+import { FoxActions, MetaMaskContext } from '../hooks';
 import {
   connectSnap,
   getSnap,
   isLocalSnap,
+  sendGetSafes,
   sendHello,
+  sendPing,
   shouldDisplayReconnectButton,
+  useSnap,
 } from '../utils';
+import { MainView } from '../components/MainView';
 
 const Container = styled.div`
   display: flex;
@@ -102,8 +108,11 @@ const ErrorMessage = styled.div`
   }
 `;
 
+const CHAIN = 5;
+
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
+  const { initSnap } = useSnap();
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? state.isFlask
@@ -115,12 +124,12 @@ const Index = () => {
       const installedSnap = await getSnap();
 
       dispatch({
-        type: MetamaskActions.SetInstalled,
+        type: FoxActions.SetInstalled,
         payload: installedSnap,
       });
     } catch (error) {
       console.error(error);
-      dispatch({ type: MetamaskActions.SetError, payload: error });
+      dispatch({ type: FoxActions.SetError, payload: error });
     }
   };
 
@@ -129,18 +138,65 @@ const Index = () => {
       await sendHello();
     } catch (error) {
       console.error(error);
-      dispatch({ type: MetamaskActions.SetError, payload: error });
+      dispatch({ type: FoxActions.SetError, payload: error });
     }
   };
 
+  const handleSendPingClick = async () => {
+    try {
+      await sendPing();
+    } catch (error) {
+      console.error(error);
+      dispatch({ type: FoxActions.SetError, payload: error });
+    }
+  };
+
+  const handleSendGetSafesClick = async () => {
+    try {
+      await sendGetSafes();
+    } catch (error) {
+      console.error(error);
+      dispatch({ type: FoxActions.SetError, payload: error });
+    }
+  };
+
+  useEffect(() => {
+    if (state.installedSnap) {
+      const chainId = BigNumber.from(window.ethereum?.chainId).toNumber();
+      console.log('chainId', chainId);
+      if (chainId !== CHAIN) {
+        dispatch({
+          type: FoxActions.SetError,
+          payload: new Error(
+            'The chain is not supported, pls switch to Goerli',
+          ),
+        });
+      }
+
+      console.log('state', state);
+      const { enabled, blocked } = state.installedSnap as unknown as {
+        enabled: boolean;
+        blocked: boolean;
+      };
+      if (enabled && !blocked) {
+        initSnap(chainId);
+      }
+    }
+  }, [state.installedSnap]);
+
+  // const chainSafes = state.safes[CHAIN];
+  // console.log('BBBBBB', chainSafes, state.account);
+  // const accSafes = !!chainSafes && chainSafes[state.account];
+  // console.log('AAAAAA', accSafes);
+
   return (
     <Container>
-      <Heading>
+      {/* <Heading>
         Welcome to <Span>template-snap</Span>
-      </Heading>
-      <Subtitle>
+      </Heading> */}
+      {/* <Subtitle>
         Get started by editing <code>src/index.ts</code>
-      </Subtitle>
+      </Subtitle> */}
       <CardContainer>
         {state.error && (
           <ErrorMessage>
@@ -172,9 +228,10 @@ const Index = () => {
               ),
             }}
             disabled={!isMetaMaskReady}
+            fullWidth
           />
         )}
-        {shouldDisplayReconnectButton(state.installedSnap) && (
+        {/* {shouldDisplayReconnectButton(state.installedSnap) && (
           <Card
             content={{
               title: 'Reconnect',
@@ -188,11 +245,12 @@ const Index = () => {
               ),
             }}
             disabled={!state.installedSnap}
+            fullWidth
           />
-        )}
-        <Card
+        )} */}
+        {/* <Card
           content={{
-            title: 'Send Hello message',
+            title: 'Send actions',
             description:
               'Display a custom message within a confirmation screen in MetaMask.',
             button: (
@@ -208,16 +266,47 @@ const Index = () => {
             Boolean(state.installedSnap) &&
             !shouldDisplayReconnectButton(state.installedSnap)
           }
-        />
-        <Notice>
+        /> */}
+        {/* <Notice>
           <p>
             Please note that the <b>snap.manifest.json</b> and{' '}
             <b>package.json</b> must be located in the server root directory and
             the bundle must be hosted at the location specified by the location
             field.
           </p>
-        </Notice>
+        </Notice> */}
       </CardContainer>
+      {state.isLoading ? (
+        <div>Loading ...</div>
+      ) : (
+        <>
+          {/* <CardContainer>
+            <Button
+              onClick={handleSendPingClick}
+              disabled={!state.installedSnap}
+            >
+              Ping
+            </Button>
+            <Button
+              onClick={handleSendGetSafesClick}
+              disabled={!state.installedSnap}
+            >
+              Get Safes
+            </Button>
+          </CardContainer> */}
+          {/* {accSafes.length && (
+            <SafeView
+              address={accSafes[0].address}
+              meta={accSafes[0].meta}
+              assets={accSafes[0].balances}
+              txs={accSafes[0].txs}
+            ></SafeView>
+          )} */}
+          {state.account && (
+            <MainView address={state.account} chainId={CHAIN} />
+          )}
+        </>
+      )}
     </Container>
   );
 };

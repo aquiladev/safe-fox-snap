@@ -1,11 +1,18 @@
 import { useContext } from 'react';
 import styled, { useTheme } from 'styled-components';
 
-import { MetamaskActions, MetaMaskContext } from '../hooks';
+import { FoxActions, MetaMaskContext } from '../hooks';
 import { connectSnap, getThemePreference, getSnap } from '../utils';
 import { HeaderButtons } from './Buttons';
 import { SnapLogo } from './SnapLogo';
 import { Toggle } from './Toggle';
+import { shortenAddress } from '../utils/utils';
+import {
+  AccountDetails,
+  AccountDetailsContent,
+  AccountImageStyled,
+} from './SideBar/SideBar.style';
+import { BigNumber } from 'ethers';
 
 const HeaderWrapper = styled.header`
   display: flex;
@@ -38,6 +45,10 @@ const RightContainer = styled.div`
   align-items: center;
 `;
 
+const AccBlock = styled.div`
+  padding-right: 10px;
+`;
+
 export const Header = ({
   handleToggleClick,
 }: {
@@ -52,21 +63,54 @@ export const Header = ({
       const installedSnap = await getSnap();
 
       dispatch({
-        type: MetamaskActions.SetInstalled,
+        type: FoxActions.SetInstalled,
         payload: installedSnap,
       });
     } catch (error) {
       console.error(error);
-      dispatch({ type: MetamaskActions.SetError, payload: error });
+      dispatch({ type: FoxActions.SetError, payload: error });
     }
   };
   return (
     <HeaderWrapper>
       <LogoWrapper>
         <SnapLogo color={theme.colors.icon?.default} size={36} />
-        <Title>template-snap</Title>
+        <Title>Safe Fox</Title>
       </LogoWrapper>
       <RightContainer>
+        {state.account && (
+          <AccBlock>
+            <AccountDetails
+              arrowVisible={false}
+              closeTrigger="click"
+              offSet={[0, 0]}
+              content={
+                <AccountDetailsContent>
+                  Derived accounts:
+                  <hr />
+                  {state.derivedEOAs.map((acc) => (
+                    <div style={{ textAlign: 'left' }}>
+                      <div>
+                        [{acc.type}] {shortenAddress(acc.origin, 8)}
+                      </div>
+                      <div>
+                        {'  '} - {acc.address}
+                      </div>
+                    </div>
+                  ))}
+                </AccountDetailsContent>
+              }
+            >
+              <AccountImageStyled
+                address={BigNumber.from(state.account).toString()}
+                size={22}
+              />
+              <b style={{ paddingTop: 7, paddingBottom: 7 }}>
+                {shortenAddress(state.account)}
+              </b>
+            </AccountDetails>
+          </AccBlock>
+        )}
         <Toggle
           onToggle={handleToggleClick}
           defaultChecked={getThemePreference()}

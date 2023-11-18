@@ -1,6 +1,8 @@
 import type { FunctionComponent, ReactNode } from 'react';
 import { useContext } from 'react';
 import styled from 'styled-components';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { fas } from '@fortawesome/free-solid-svg-icons';
 
 import { Footer, Header } from './components';
 import { GlobalStyle } from './config/theme';
@@ -17,6 +19,8 @@ const Wrapper = styled.div`
 export type AppProps = {
   children: ReactNode;
 };
+
+library.add(fas);
 
 export const App: FunctionComponent<AppProps> = ({ children }) => {
   const toggleTheme = useContext(ToggleThemeContext);
